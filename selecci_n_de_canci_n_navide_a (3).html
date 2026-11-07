@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selección de Canción Navideña - Sorteo en Vivo para Profesores</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        navidad: {
+                            red: '#c0392b',
+                            redDark: '#900c3f',
+                            green: '#27ae60',
+                            greenDark: '#1e8449',
+                            gold: '#f39c12',
+                            goldLight: '#f1c40f',
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 0.6s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 14s linear infinite',
+                        'bounce-short': 'bounce 1s infinite'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Mountains+of+Christmas:wght@700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-festive { font-family: 'Mountains of Christmas', cursive; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(220, 38, 38, 0.4); border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(220, 38, 38, 0.7); }
+        .blur-shuffle { filter: blur(1.5px); opacity: 0.8; transform: scale(0.98); }
+        .christmas-radial { background: radial-gradient(circle at 50% 30%, rgba(220, 38, 38, 0.18) 0%, rgba(39, 174, 96, 0.08) 50%, rgba(15, 23, 42, 0) 80%); }
+        #snowCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        .content-layer { position: relative; z-index: 10; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen transition-colors duration-200 christmas-radial">
+
+    <!-- Floating Snowflakes Canvas -->
+    <canvas id="snowCanvas"></canvas>
+
+    <!-- Main Container -->
+    <div class="content-layer max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col min-h-screen">
+        
+        <!-- Encabezado / Header Nav -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-6 border-b border-red-900/40 gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-600 via-emerald-600 to-amber-500 flex items-center justify-center text-white shadow-lg shadow-red-600/30 ring-2 ring-amber-400/50">
+                    <i class="fa-solid fa-gift text-2xl animate-spin-slow"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-red-400 via-amber-300 to-emerald-400 bg-clip-text text-transparent flex items-center gap-2">
+                        <span class="font-festive text-3xl sm:text-4xl tracking-wider">Selección de Canción Navideña</span>
+                        <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-700 uppercase tracking-wider hidden sm:inline-block">En Vivo</span>
+                    </h1>
+                    <p class="text-xs sm:text-sm font-medium text-slate-400 flex items-center gap-2 mt-0.5">
+                        <span id="syncDot" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span id="syncStatusText">Conectando con la sala navideña...</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Botones Superiores de Control -->
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 self-end md:self-auto">
+                <!-- Selector Rápido de las 3 Bases de Datos -->
+                <div class="flex items-center bg-slate-800/90 border border-red-900/50 rounded-xl p-1 shadow-sm text-xs space-x-1">
+                    <button onclick="switchDatabase('base1')" id="dbBtn-base1" class="db-tab-btn px-2.5 py-1 rounded-lg font-bold text-[11px] transition bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-sm flex items-center gap-1">
+                        <i class="fa-solid fa-database text-[10px]"></i> Base 1 🎅
+                    </button>
+                    <button onclick="switchDatabase('base2')" id="dbBtn-base2" class="db-tab-btn px-2.5 py-1 rounded-lg font-bold text-[11px] text-slate-400 hover:text-white transition flex items-center gap-1">
+                        <i class="fa-solid fa-database text-[10px]"></i> Base 2 🎄
+                    </button>
+                    <button onclick="switchDatabase('base3')" id="dbBtn-base3" class="db-tab-btn px-2.5 py-1 rounded-lg font-bold text-[11px] text-slate-400 hover:text-white transition flex items-center gap-1">
+                        <i class="fa-solid fa-database text-[10px]"></i> Base 3 🎁
+                    </button>
+                </div>
+
+                <!-- Indicador de Sala -->
+                <div class="hidden sm:flex items-center bg-slate-800/90 border border-red-900/50 rounded-xl px-3 py-1.5 shadow-sm text-xs space-x-2">
+                    <i class="fa-solid fa-holly-berry text-red-500"></i>
+                    <span class="font-bold text-slate-400 uppercase text-[10px]">ID:</span>
+                    <span id="currentRoomIdDisplay" class="font-extrabold text-amber-400">base1</span>
+                    <button onclick="openModal('roomModal')" class="ml-1 text-slate-400 hover:text-amber-300 underline text-[11px]" title="Personalizar ID de Sala">
+                        Personalizar
+                    </button>
+                </div>
+
+                <!-- Botón de Acceso Modo Organizador / Admin -->
+                <div id="adminBadgeContainer">
+                    <button id="adminLoginBtn" onclick="openAdminPinModal()" class="px-3 py-1.5 rounded-xl border border-amber-500/50 bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 font-bold text-xs transition flex items-center gap-1.5" title="Acceso exclusivo para administradores y organizadores">
+                        <i class="fa-solid fa-lock text-amber-400"></i>
+                        <span>Organizador</span>
+                    </button>
+                </div>
+
+                <!-- Copiar Enlace para Profesores -->
+                <button onclick="copyShareLink()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-600 to-emerald-600 hover:from-red-500 hover:to-emerald-500 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5" title="Copiar enlace para enviar por WhatsApp o Email">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    <span class="hidden sm:inline">Copiar Enlace</span>
+                </button>
+
+                <!-- Audio Switch -->
+                <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 transition shadow-sm" title="Activar/Silenciar Efectos de Sonido Navideños">
+                    <i id="soundIcon" class="fa-solid fa-bell text-amber-400"></i>
+                </button>
+
+                <!-- Botón de Ayuda -->
+                <button onclick="openModal('helpModal')" class="p-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 transition shadow-sm">
+                    <i class="fa-solid fa-circle-question text-emerald-400"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- BANNER DE IDENTIFICACIÓN DEL PROFESOR -->
+        <div class="mb-6 bg-gradient-to-r from-red-600 via-amber-500 to-emerald-600 p-0.5 rounded-2xl shadow-lg">
+            <div class="bg-slate-800/95 rounded-[14px] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-950 text-red-400 border border-red-800 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-amber-400">Identidad del Profesor(a)</p>
+                        <h2 class="text-sm font-extrabold text-slate-100">¿Quién realizará el sorteo en este dispositivo?</h2>
+                    </div>
+                </div>
+
+                <!-- Campo de Nombre del Profesor -->
+                <div class="flex items-center space-x-2 flex-grow sm:max-w-xs">
+                    <div class="relative w-full">
+                        <i class="fa-solid fa-pen-nib absolute left-3 top-3 text-slate-400 text-xs"></i>
+                        <input id="teacherNameInput" type="text" placeholder="Nombre (ej. Profe María, Prof. Carlos)" oninput="handleTeacherNameInput()" class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 text-white">
+                    </div>
+                    <span id="teacherSavedCheck" class="text-emerald-400 hidden" title="Nombre guardado en este navegador">
+                        <i class="fa-solid fa-circle-check text-lg"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN PRINCIPAL: TARJETA DE SORTEO Y MÉTRICAS -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+            
+            <!-- TARJETA PRINCIPAL DEL SORTEO (Lado Izquierdo - 7 cols) -->
+            <div class="lg:col-span-7 bg-slate-800/90 rounded-3xl p-6 border border-slate-700/80 shadow-2xl flex flex-col justify-between space-y-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-red-600/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <!-- Barra de Estadísticas Rápida -->
+                <div class="flex items-center justify-between pb-4 border-b border-slate-700/60">
+                    <div class="flex items-center space-x-2">
+                        <span id="currentTeacherTag" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300">
+                            Profesor(a): Anónimo
+                        </span>
+                    </div>
+                    <div class="text-right">
+                        <span id="poolStatsText" class="text-xs font-bold text-amber-400">0 / 0 Disponibles</span>
+                    </div>
+                </div>
+
+                <!-- Visor Central de Resultados de Sorteo -->
+                <div class="py-8 px-4 text-center flex flex-col items-center justify-center space-y-4">
+                    <div id="pickerVisualBox" class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-red-600 to-emerald-600 flex items-center justify-center shadow-xl shadow-red-950/50 ring-4 ring-amber-400/30 transition-transform duration-300">
+                        <i id="pickerVisualIcon" class="fa-solid fa-gift text-4xl text-amber-300"></i>
+                    </div>
+
+                    <!-- Insignia de Ganador / Asignación -->
+                    <div id="teacherBadge" class="hidden inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-950 text-amber-300 border border-amber-700 text-xs font-extrabold animate-bounce-short">
+                        <i class="fa-solid fa-user-check"></i>
+                        <span>Asignada a: <span id="teacherBadgeName">---</span></span>
+                    </div>
+
+                    <!-- Título de la Canción Ganadora -->
+                    <h2 id="songTitleDisplay" class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight max-w-md transition-all duration-200">
+                        ¡Listos para sortear!
+                    </h2>
+                    <p id="songArtistDisplay" class="text-xs sm:text-sm text-slate-400 font-semibold max-w-sm">
+                        Presiona el botón de abajo para obtener tu canción navideña sin duplicados.
+                    </p>
+                </div>
+
+                <!-- Botón Principal de Sorteo -->
+                <div class="pt-2">
+                    <button id="drawBtn" onclick="drawSong()" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-amber-600 to-emerald-600 hover:from-red-500 hover:via-amber-500 hover:to-emerald-500 text-white font-extrabold text-base sm:text-lg shadow-xl shadow-red-900/40 hover:shadow-red-800/60 active:scale-[0.99] transition transform flex items-center justify-center space-x-3 group">
+                        <i class="fa-solid fa-dice text-amber-300 text-xl group-hover:rotate-180 transition-transform duration-500"></i>
+                        <span id="drawBtnText">¡OBTENER CANCIÓN NAVIDEÑA!</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TARJETA DE MÉTRICAS Y ACTIVIDAD (Lado Derecho - 5 cols) -->
+            <div class="lg:col-span-5 flex flex-col space-y-4">
+                
+                <!-- Métricas -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 text-center shadow-md">
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total</p>
+                        <p id="metricTotal" class="text-xl font-extrabold text-white mt-1">0</p>
+                    </div>
+                    <div class="bg-slate-800/80 p-4 rounded-2xl border border-emerald-900/50 text-center shadow-md">
+                        <p class="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider">Disponibles</p>
+                        <p id="metricRemaining" class="text-xl font-extrabold text-emerald-400 mt-1">0</p>
+                    </div>
+                    <div class="bg-slate-800/80 p-4 rounded-2xl border border-red-900/50 text-center shadow-md">
+                        <p class="text-[10px] font-extrabold text-red-400 uppercase tracking-wider">Asignadas</p>
+                        <p id="metricPlayed" class="text-xl font-extrabold text-red-400 mt-1">0</p>
+                    </div>
+                </div>
+
+                <!-- Barra de Progreso del Repertorio -->
+                <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 shadow-md space-y-2">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span class="text-slate-300">Progreso del Repertorio Navideño</span>
+                        <span class="text-amber-400">Disponibilidad</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                        <div id="poolProgressBar" class="bg-gradient-to-r from-emerald-500 via-amber-400 to-red-500 h-full rounded-full transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <!-- Pestañas de Asignaciones y Repertorio Disponible -->
+                <div class="bg-slate-800/90 rounded-3xl p-4 border border-slate-700 shadow-xl flex-grow flex flex-col min-h-[340px]">
+                    
+                    <!-- Barra de Navegación de Pestañas -->
+                    <div class="flex bg-slate-900/80 p-1 rounded-2xl mb-4 border border-slate-700/60">
+                        <button id="tabBtn-historyTab" onclick="switchTab('historyTab')" class="tab-btn flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 bg-gradient-to-r from-red-600 to-emerald-600 text-white shadow-sm">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span>Asignadas</span>
+                            <span id="tabCountPlayed" class="px-1.5 py-0.5 rounded-full bg-black/40 text-[10px]">0</span>
+                        </button>
+
+                        <button id="tabBtn-availableTab" onclick="switchTab('availableTab')" class="tab-btn flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold text-slate-400 hover:bg-slate-700 transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-music"></i>
+                            <span>Disponibles</span>
+                            <span id="tabCountRemaining" class="px-1.5 py-0.5 rounded-full bg-black/40 text-[10px]">0</span>
+                        </button>
+
+                        <button id="tabBtn-adminTab" onclick="openAdminPinModal()" class="tab-btn flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold text-amber-400 hover:bg-slate-700 transition flex items-center justify-center space-x-1.5" title="Ajustes de Organizador">
+                            <i class="fa-solid fa-gear"></i>
+                            <span>Admin</span>
+                        </button>
+                    </div>
+
+                    <!-- CONTENIDO DE PESTAÑA: CANCIONES ASIGNADAS (Historial) -->
+                    <div id="tabContent-historyTab" class="tab-content flex-grow flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Canciones Asignadas por Profesor</h3>
+                            <div class="flex space-x-1">
+                                <button onclick="copyHistoryToClipboard()" class="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-bold transition" title="Copiar lista de asignaciones">
+                                    <i class="fa-solid fa-copy mr-1"></i>Copiar
+                                </button>
+                                <button onclick="exportHistoryCSV()" class="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-800 text-[11px] font-bold transition" title="Exportar CSV">
+                                    <i class="fa-solid fa-file-csv mr-1"></i>CSV
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="historyList" class="space-y-2 overflow-y-auto max-h-[260px] custom-scrollbar pr-1 flex-grow">
+                            <!-- Inyectado por JS -->
+                        </div>
+                    </div>
+
+                    <!-- CONTENIDO DE PESTAÑA: CANCIONES DISPONIBLES -->
+                    <div id="tabContent-availableTab" class="tab-content hidden flex-grow flex flex-col">
+                        <div class="mb-3">
+                            <div class="relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                                <input id="poolSearch" type="text" placeholder="Buscar canción en la lista disponible..." oninput="renderActivePoolList()" class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 text-white">
+                            </div>
+                        </div>
+
+                        <div id="activePoolList" class="space-y-2 overflow-y-auto max-h-[260px] custom-scrollbar pr-1 flex-grow">
+                            <!-- Inyectado por JS -->
+                        </div>
+                    </div>
+
+                    <!-- CONTENIDO DE PESTAÑA: ADMIN / ORGANIZADOR (Solo Visible al Desbloquear) -->
+                    <div id="tabContent-adminTab" class="tab-content hidden flex-grow flex flex-col space-y-4">
+                        <div class="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="fa-solid fa-sliders"></i> Panel de Control del Organizador
+                                </h4>
+                                <button onclick="openChangePinModal()" class="text-[10px] font-bold text-amber-300 underline hover:text-amber-200">
+                                    Cambiar PIN
+                                </button>
+                            </div>
+
+                            <!-- Agregar Canción Rápida -->
+                            <div class="flex space-x-2">
+                                <input id="quickAddInput" type="text" placeholder="Agregar villancico o canción..." onkeydown="if(event.key === 'Enter') addSingleSong()" class="flex-grow px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-500">
+                                <button onclick="addSingleSong()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+
+                            <!-- Preajustes Rápidos -->
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 mb-1">Cargar Preajustes Navideños:</p>
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <button onclick="loadPreset('villancicos')" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold border border-slate-700 text-left truncate">
+                                        🎄 Villancicos Clásicos
+                                    </button>
+                                    <button onclick="loadPreset('popNavideno')" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold border border-slate-700 text-left truncate">
+                                        ⭐ Pop Navideño
+                                    </button>
+                                    <button onclick="loadPreset('navidadLatina')" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold border border-slate-700 text-left truncate">
+                                        🇲🇽 Navidad Latina
+                                    </button>
+                                    <button onclick="loadPreset('infantil')" class="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold border border-slate-700 text-left truncate">
+                                        🎁 Infantil
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Acciones Avanzadas -->
+                            <div class="pt-2 border-t border-slate-700/60 flex flex-wrap gap-2">
+                                <button onclick="openModal('editorModal')" class="flex-1 py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] border border-slate-700">
+                                    <i class="fa-solid fa-pen-to-square mr-1"></i>Editar Todo
+                                </button>
+                                <button onclick="cleanDuplicates()" class="flex-1 py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] border border-slate-700">
+                                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Limpiar Duplicados
+                                </button>
+                                <button onclick="shuffleActivePool()" class="flex-1 py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] border border-slate-700">
+                                    <i class="fa-solid fa-shuffle mr-1"></i>Mezclar
+                                </button>
+                            </div>
+
+                            <div class="pt-1">
+                                <button onclick="confirmResetAll()" class="w-full py-2 px-3 rounded-xl bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-200 font-bold text-xs shadow-sm flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-rotate-left text-rose-400"></i>
+                                    <span>Reiniciar Sala Navideña</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+        <!-- Pie de página / Footer -->
+        <footer class="mt-auto pt-6 border-t border-red-900/30 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>Selección de Canción Navideña &copy; Sorteo de canciones sin repetir entre profesores.</p>
+            <p class="flex items-center gap-1">
+                <i class="fa-solid fa-snowflake text-amber-400"></i> Conectado a Sala: <span id="footerRoomId" class="font-extrabold text-slate-300">navidad2026</span>
+            </p>
+        </footer>
+
+        <!-- MODAL: CAMBIAR SALA -->
+        <div id="roomModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-slate-800 rounded-3xl max-w-sm w-full p-6 border border-slate-700 shadow-2xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-database text-amber-400"></i> Seleccionar Base de Datos
+                    </h3>
+                    <button onclick="closeModal('roomModal')" class="text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <p class="text-xs text-slate-300">
+                    Selecciona una de las 3 bases de datos predeterminadas o escribe un nombre personalizado para crear otra sala.
+                </p>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="switchDatabase('base1'); closeModal('roomModal');" class="py-2.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-amber-300 text-center">
+                        🎅 Base 1
+                    </button>
+                    <button onclick="switchDatabase('base2'); closeModal('roomModal');" class="py-2.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-emerald-300 text-center">
+                        🎄 Base 2
+                    </button>
+                    <button onclick="switchDatabase('base3'); closeModal('roomModal');" class="py-2.5 px-2 rounded-xl bg-slate-900 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-red-300 text-center">
+                        🎁 Base 3
+                    </button>
+                </div>
+
+                <div class="pt-2 border-t border-slate-700">
+                    <label class="block text-xs font-bold text-slate-300 mb-1">O escribe un nombre personalizado</label>
+                    <input id="roomInput" type="text" placeholder="ej. grupo-primaria" onkeydown="if(event.key === 'Enter') switchRoomFromModal()" class="w-full px-4 py-2 text-xs font-semibold rounded-xl bg-slate-900 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 text-white">
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-1">
+                    <button onclick="closeModal('roomModal')" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold">Cancelar</button>
+                    <button onclick="switchRoomFromModal()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition">Unirse</button>
+                </div>
+            </div>
+        </div>
+
+    <!-- MODAL: ACCESO ADMINISTRADOR (PIN) -->
+    <div id="adminPinModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-3xl max-w-sm w-full p-6 border border-amber-500/40 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-shield-cat text-amber-400 text-lg"></i> Acceso Organizador / Admin
+                </h3>
+                <button onclick="closeModal('adminPinModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-300">
+                Ingresa el PIN de seguridad para acceder a los ajustes, preajustes, reinicio de sala y herramientas de edición.
+            </p>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-300 mb-1">PIN de Seguridad</label>
+                <input id="adminPinInput" type="password" maxlength="8" placeholder="PIN (Predeterminado: 1234)" onkeydown="if(event.key === 'Enter') verifyAdminPin()" class="w-full px-4 py-3 text-center tracking-widest text-lg font-mono rounded-xl bg-slate-900 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 text-amber-400">
+                <p class="text-[10px] text-slate-400 mt-1 text-center">PIN por defecto: <code class="bg-slate-900 px-1 py-0.5 rounded text-amber-300">1234</code></p>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeModal('adminPinModal')" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold">Cancelar</button>
+                <button onclick="verifyAdminPin()" class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow-md transition">Desbloquear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CAMBIAR PIN DE ORGANIZADOR -->
+    <div id="changePinModal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-3xl max-w-sm w-full p-6 border border-slate-700 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-key text-amber-400"></i> Cambiar PIN de Administrador
+                </h3>
+                <button onclick="closeModal('changePinModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-300 mb-1">Nuevo PIN de Seguridad</label>
+                <input id="newPinInput" type="password" maxlength="8" placeholder="Escribe tu nuevo PIN" class="w-full px-4 py-2.5 text-center font-mono text-base rounded-xl bg-slate-900 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 text-white">
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeModal('changePinModal')" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold">Cancelar</button>
+                <button onclick="saveNewPin()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition">Guardar PIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDICIÓN MASIVA DE TEXTO -->
+    <div id="editorModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-3xl max-w-2xl w-full p-6 border border-slate-700 shadow-2xl flex flex-col space-y-4 max-h-[90vh]">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-amber-400"></i> Editar Lista de Canciones Disponibles
+                </h3>
+                <button onclick="closeModal('editorModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-400">
+                Pega la lista de canciones en el recuadro. Escribe una canción por línea (ej. <code class="bg-slate-900 px-1.5 py-0.5 rounded text-amber-400">Mi Burrito Sabanero</code>). Guardar actualizará la sala para todos los profesores.
+            </p>
+
+            <textarea id="bulkTextarea" class="w-full h-64 p-4 rounded-2xl bg-slate-900 border border-slate-700 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 text-white custom-scrollbar resize-none" placeholder="Escribe una canción por línea..."></textarea>
+
+            <div class="flex items-center justify-between pt-2">
+                <span id="bulkLineCount" class="text-xs font-semibold text-slate-400">0 canciones en lista</span>
+                <div class="flex space-x-2">
+                    <button onclick="closeModal('editorModal')" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-700 text-xs font-bold">Cancelar</button>
+                    <button onclick="saveBulkEditor()" class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition">Guardar Repertorio</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AYUDA -->
+    <div id="helpModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-3xl max-w-lg w-full p-6 border border-slate-700 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-emerald-400"></i> ¿Cómo funciona el Sorteo Navideño?
+                </h3>
+                <button onclick="closeModal('helpModal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <div class="flex gap-3 items-start">
+                    <div class="w-6 h-6 rounded-full bg-red-950 text-red-400 border border-red-800 font-bold flex items-center justify-center flex-shrink-0 text-xs">1</div>
+                    <p><strong class="text-white">Comparte el Enlace:</strong> Haz clic en <span class="font-bold text-amber-400">Copiar Enlace</span> y envíalo a tus compañeros profesores por WhatsApp o correo. Todos entrarán a la misma sala.</p>
+                </div>
+                <div class="flex gap-3 items-start">
+                    <div class="w-6 h-6 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold flex items-center justify-center flex-shrink-0 text-xs">2</div>
+                    <p><strong class="text-white">Identifícate:</strong> Escribe tu nombre en la barra superior para que todos vean qué canción te fue asignada.</p>
+                </div>
+                <div class="flex gap-3 items-start">
+                    <div class="w-6 h-6 rounded-full bg-amber-950 text-amber-400 border border-amber-800 font-bold flex items-center justify-center flex-shrink-0 text-xs">3</div>
+                    <p><strong class="text-white">Sorteo Sin Repetir:</strong> Al hacer clic en <span class="font-bold text-emerald-400">¡Obtener Canción Navideña!</span>, la canción elegida quedará reservada a tu nombre y desaparecerá de la lista disponible para los demás profesores en tiempo real.</p>
+                </div>
+            </div>
+
+            <div class="pt-2 text-right">
+                <button onclick="closeModal('helpModal')" class="px-5 py-2 rounded-xl bg-red-600 text-white font-bold text-xs hover:bg-red-700 transition">¡Entendido!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRMACIÓN -->
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-3xl max-w-md w-full p-6 border border-slate-700 shadow-2xl space-y-4">
+            <h3 id="confirmTitle" class="text-lg font-bold text-white">¿Estás seguro?</h3>
+            <p id="confirmMessage" class="text-xs sm:text-sm text-slate-300">Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeModal('confirmModal')" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-bold">Cancelar</button>
+                <button id="confirmActionBtn" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR DE NOTIFICACIONES TOAST -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- JAVASCRIPT & FIREBASE SYNC MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment Firebase Setup
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'navidad-song-picker-2026';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyDemoPlaceholderOnly",
+            authDomain: "demo-app.firebaseapp.com",
+            projectId: "demo-app",
+            storageBucket: "demo-app.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:demo"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        /* ==========================================================================
+           1. REPERTORIOS Y PREAJUSTES NAVIDEÑOS
+           ========================================================================== */
+        const PRESETS = {
+            villancicos: [
+                "Navidad Rock",
+                "Rodolfo el reno",
+                "El Burrito sabanero",
+                "Los peces en el río",
+                "Arre borriquito",
+                "La marimorena",
+                "Santa Claus llegó a la ciudad",
+                "Rockin' Around the Christmas Tree",
+                "All I want for Christmas is you",
+                "Los pastores a Belén",
+                "Campana sobre campana",
+                "La marcha de los renitos"
+            ],
+            popNavideno: [
+                "All I Want for Christmas Is You - Mariah Carey",
+                "Last Christmas - Wham!",
+                "It's Beginning to Look a Lot Like Christmas - Michael Bublé",
+                "Santa Tell Me - Ariana Grande",
+                "Rockin' Around the Christmas Tree - Brenda Lee",
+                "Jingle Bell Rock - Bobby Helms",
+                "Feliz Navidad - José Feliciano",
+                "Happy Xmas (War Is Over) - John Lennon",
+                "Snowman - Sia",
+                "Underneath the Tree - Kelly Clarkson"
+            ],
+            navidadLatina: [
+                "Mi Burrito Sabanero - La Ronda de Navidad",
+                "Ven a Cantar - La Hermandad",
+                "El Año Viejo - Tony Camargo",
+                "Faltan Cinco para las Doce - Néstor Zavarce",
+                "Navidad Sin Ti - Los Bukis",
+                "Amarga Navidad - José Alfredo Jiménez",
+                "Mamá, ¿Dónde Están los Juguetes? - Raquel Castaños",
+                "Esta Navidad - Gloria Estefan",
+                "Llegó la Navidad - Ozuna & Christian Nodal",
+                "Cantares de Navidad - Billo's Caracas Boys"
+            ],
+            infantil: [
+                "Rodolfo el Reno - Tatiana",
+                "Cascabel - Tatiana",
+                "Los Peces en el Río - Villancicos Infantiles",
+                "Campana Sobre Campana - Coro Infantil",
+                "Arre Borriquito - Plim Plim",
+                "Frosty el Muñeco de Nieve",
+                "Santa Claus Llegó a la Ciudad - Luis Miguel",
+                "Noche de Paz - Canto Infantil",
+                "Paseo en Trineo",
+                "Dulce Navidad"
+            ]
+        };
+
+        /* ==========================================================================
+           2. ESTADO GLOBAL DE LA APLICACIÓN
+           ========================================================================== */
+        let state = {
+            roomId: getRoomIdFromURL() || 'base1',
+            teacherName: localStorage.getItem('navidad_teacher_name') || '',
+            availablePool: [...PRESETS.villancicos],
+            claimedSongs: [],
+            lastWinner: null,
+            soundEnabled: localStorage.getItem('navidad_sound') !== 'false',
+            isDrawing: false,
+            currentUser: null,
+            unsubscribeRoom: null,
+            isAdmin: false,
+            adminPin: localStorage.getItem('navidad_admin_pin') || '1234',
+            useLocalStorage: false
+        };
+
+        window.state = state;
+
+        window.switchDatabase = function(dbKey) {
+            subscribeToRoom(dbKey);
+            updateDatabaseButtonsUI(dbKey);
+            showToast(`Cambiado a ${dbKey.toUpperCase()}`, "info");
+        };
+
+        function updateDatabaseButtonsUI(activeKey) {
+            ['base1', 'base2', 'base3'].forEach(key => {
+                const btn = document.getElementById(`dbBtn-${key}`);
+                if (!btn) return;
+                if (key === activeKey) {
+                    btn.className = "db-tab-btn px-2.5 py-1 rounded-lg font-bold text-[11px] transition bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-sm flex items-center gap-1";
+                } else {
+                    btn.className = "db-tab-btn px-2.5 py-1 rounded-lg font-bold text-[11px] text-slate-400 hover:text-white transition flex items-center gap-1";
+                }
+            });
+        }
+
+        function getRoomIdFromURL() {
+            const match = window.location.hash.match(/#room=([a-zA-Z0-9_-]+)/);
+            return match ? match[1] : null;
+        }
+
+        function setRoomIDInURL(roomId) {
+            window.location.hash = `room=${roomId}`;
+        }
+
+        /* ==========================================================================
+           GESTIÓN Y RESPALDO LOCAL (Para Google Sites / Encrustado)
+           ========================================================================== */
+        function loadFromLocalStorage(roomId) {
+            try {
+                const stored = localStorage.getItem(`navidad_room_${roomId}`);
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    state.availablePool = (data.availablePool && data.availablePool.length > 0) 
+                        ? data.availablePool 
+                        : [...PRESETS.villancicos];
+                    state.claimedSongs = data.claimedSongs || [];
+                    state.lastWinner = data.lastWinner || null;
+                } else {
+                    state.availablePool = [...PRESETS.villancicos];
+                    state.claimedSongs = [];
+                    state.lastWinner = null;
+                    saveToLocalStorage(roomId);
+                }
+            } catch (e) {
+                state.availablePool = [...PRESETS.villancicos];
+            }
+        }
+
+        function saveToLocalStorage(roomId) {
+            try {
+                const data = {
+                    availablePool: state.availablePool,
+                    claimedSongs: state.claimedSongs,
+                    lastWinner: state.lastWinner,
+                    updatedAt: new Date().toISOString()
+                };
+                localStorage.setItem(`navidad_room_${roomId}`, JSON.stringify(data));
+            } catch (e) {}
+        }
+
+        /* ==========================================================================
+           3. AUTENTICACIÓN Y SINCRONIZACIÓN FIRESTORE
+           ========================================================================== */
+        async function initAuth() {
+            updateSyncStatus('connecting', 'Iniciando lista navideña...');
+            
+            // Cargar datos locales de inmediato para evitar pantalla en blanco
+            loadFromLocalStorage(state.roomId);
+            renderAll();
+
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else if (typeof __firebase_config !== 'undefined' && firebaseConfig.apiKey !== "AIzaSyDemoPlaceholderOnly") {
+                    await signInAnonymously(auth);
+                } else {
+                    // Modo Google Sites o Hosting Independiente sin Firebase
+                    state.useLocalStorage = true;
+                    subscribeToRoom(state.roomId);
+                    return;
+                }
+            } catch (err) {
+                console.warn("Modo local activado para Google Sites:", err);
+                state.useLocalStorage = true;
+                subscribeToRoom(state.roomId);
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            state.currentUser = user;
+            if (user && !state.useLocalStorage) {
+                subscribeToRoom(state.roomId);
+            }
+        });
+
+        function subscribeToRoom(roomId) {
+            state.roomId = roomId;
+            setRoomIDInURL(roomId);
+
+            const roomDisplay = document.getElementById('currentRoomIdDisplay');
+            if (roomDisplay) roomDisplay.textContent = roomId;
+            const footerDisplay = document.getElementById('footerRoomId');
+            if (footerDisplay) footerDisplay.textContent = roomId;
+
+            updateDatabaseButtonsUI(roomId);
+
+            // Cargar datos locales para que las 12 canciones estén disponibles de inmediato
+            loadFromLocalStorage(roomId);
+            renderAll();
+
+            if (!state.currentUser || state.useLocalStorage) {
+                updateSyncStatus('connected-local', `Conectado a ${roomId.toUpperCase()} 🟡`);
+                return;
+            }
+
+            if (state.unsubscribeRoom) {
+                state.unsubscribeRoom();
+            }
+
+            updateSyncStatus('connecting', `Sincronizando ${roomId}...`);
+
+            try {
+                const roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+
+                state.unsubscribeRoom = onSnapshot(roomDocRef, async (docSnap) => {
+                    if (!docSnap.exists()) {
+                        const initialData = {
+                            roomId: roomId,
+                            availablePool: state.availablePool.length > 0 ? state.availablePool : [...PRESETS.villancicos],
+                            claimedSongs: state.claimedSongs || [],
+                            updatedAt: new Date().toISOString()
+                        };
+                        await setDoc(roomDocRef, initialData);
+                        updateSyncStatus('connected', `${roomId.toUpperCase()} en Vivo 🟢`);
+                    } else {
+                        const data = docSnap.data();
+                        state.availablePool = data.availablePool || [...PRESETS.villancicos];
+                        state.claimedSongs = data.claimedSongs || [];
+
+                        if (data.lastWinner) {
+                            state.lastWinner = data.lastWinner;
+                            renderLastWinnerDisplay(data.lastWinner);
+                        }
+
+                        saveToLocalStorage(roomId);
+                        renderAll();
+                        updateSyncStatus('connected', `${roomId.toUpperCase()} en Vivo 🟢`);
+                    }
+                }, (error) => {
+                    console.warn("Fallback a almacenamiento local:", error);
+                    state.useLocalStorage = true;
+                    loadFromLocalStorage(roomId);
+                    renderAll();
+                    updateSyncStatus('connected-local', `Conectado a ${roomId.toUpperCase()} (Modo Local) 🟡`);
+                });
+            } catch (err) {
+                console.warn("Fallback por excepción:", err);
+                state.useLocalStorage = true;
+                loadFromLocalStorage(roomId);
+                renderAll();
+                updateSyncStatus('connected-local', `Conectado a ${roomId.toUpperCase()} (Modo Local) 🟡`);
+            }
+        }
+
+        async function updateRoomDocument(updates) {
+            // Actualizar estado local
+            if (updates.availablePool !== undefined) state.availablePool = updates.availablePool;
+            if (updates.claimedSongs !== undefined) state.claimedSongs = updates.claimedSongs;
+            if (updates.lastWinner !== undefined) state.lastWinner = updates.lastWinner;
+
+            saveToLocalStorage(state.roomId);
+            renderAll();
+
+            if (state.useLocalStorage || !state.currentUser) return;
+
+            try {
+                const roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', state.roomId);
+                updates.updatedAt = new Date().toISOString();
+                await updateDoc(roomDocRef, updates);
+            } catch (err) {
+                console.warn("No se pudo enviar a la nube, guardado localmente:", err);
+                state.useLocalStorage = true;
+                updateSyncStatus('connected-local', 'Guardado en Modo Local 🟡');
+            }
+        }
+
+        function updateSyncStatus(type, label) {
+            const dot = document.getElementById('syncDot');
+            const statusText = document.getElementById('syncStatusText');
+            if (!dot || !statusText) return;
+
+            statusText.textContent = label;
+            if (type === 'connected') {
+                dot.className = "inline-block w-2.5 h-2.5 rounded-full bg-emerald-500";
+            } else if (type === 'connected-local') {
+                dot.className = "inline-block w-2.5 h-2.5 rounded-full bg-amber-400";
+            } else if (type === 'connecting') {
+                dot.className = "inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
+            } else {
+                dot.className = "inline-block w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping";
+            }
+        }
+
+        /* ==========================================================================
+           4. SINTETIZADOR DE SONIDO NAVIDEÑO (WEB AUDIO API)
+           ========================================================================== */
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) audioCtx = new AudioContextClass();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playJingleBell() {
+            if (!state.soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const freqs = [2093, 2637, 3135, 4186];
+                freqs.forEach(f => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.12);
+                });
+            } catch (e) {}
+        }
+
+        function playChristmasFanfare() {
+            if (!state.soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                // Melodía Navideña "Jingle Bells": E5, E5, E5, E5, E5, E5, E5, G5, C5, D5, E5
+                const notes = [
+                    { f: 659.25, d: 0.14, t: 0 },
+                    { f: 659.25, d: 0.14, t: 0.15 },
+                    { f: 659.25, d: 0.28, t: 0.30 },
+                    { f: 659.25, d: 0.14, t: 0.58 },
+                    { f: 659.25, d: 0.14, t: 0.73 },
+                    { f: 659.25, d: 0.28, t: 0.88 },
+                    { f: 659.25, d: 0.14, t: 1.16 },
+                    { f: 783.99, d: 0.14, t: 1.31 },
+                    { f: 523.25, d: 0.16, t: 1.46 },
+                    { f: 587.33, d: 0.16, t: 1.64 },
+                    { f: 659.25, d: 0.45, t: 1.82 }
+                ];
+                notes.forEach(n => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(n.f, ctx.currentTime + n.t);
+                    gain.gain.setValueAtTime(0.18, ctx.currentTime + n.t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + n.t + n.d);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + n.t);
+                    osc.stop(ctx.currentTime + n.t + n.d);
+                });
+            } catch (e) {}
+        }
+
+        window.toggleSound = function() {
+            state.soundEnabled = !state.soundEnabled;
+            localStorage.setItem('navidad_sound', state.soundEnabled);
+            updateSoundUI();
+            showToast(state.soundEnabled ? "Efectos de sonido activados" : "Sonido silenciado", "info");
+        };
+
+        function updateSoundUI() {
+            const soundIcon = document.getElementById('soundIcon');
+            if (state.soundEnabled) {
+                soundIcon.className = "fa-solid fa-bell text-amber-400";
+            } else {
+                soundIcon.className = "fa-solid fa-bell-slash text-slate-400";
+            }
+        }
+
+        /* ==========================================================================
+           5. MOTOR DE SORTEO NAVIDEÑO EN TIEMPO REAL
+           ========================================================================== */
+        window.drawSong = async function() {
+            if (state.isDrawing) return;
+
+            if (!state.teacherName.trim()) {
+                showToast("¡Por favor escribe tu nombre de Profesor(a) antes de sortear!", "warning");
+                const input = document.getElementById('teacherNameInput');
+                input.focus();
+                input.classList.add('ring-2', 'ring-rose-500');
+                setTimeout(() => input.classList.remove('ring-2', 'ring-rose-500'), 2000);
+                return;
+            }
+
+            if (state.availablePool.length === 0) {
+                showToast("¡El repertorio está vacío! Carga un preajuste o reinicia la sala.", "warning");
+                return;
+            }
+
+            state.isDrawing = true;
+            const drawBtn = document.getElementById('drawBtn');
+            const drawBtnText = document.getElementById('drawBtnText');
+            const songTitleDisplay = document.getElementById('songTitleDisplay');
+            const songArtistDisplay = document.getElementById('songArtistDisplay');
+            const visualBox = document.getElementById('pickerVisualBox');
+            const visualIcon = document.getElementById('pickerVisualIcon');
+
+            drawBtn.disabled = true;
+            drawBtnText.textContent = "SORTEANDO CANCIÓN...";
+            visualBox.classList.add('animate-pulse-fast', 'scale-110');
+            visualIcon.className = "fa-solid fa-snowflake text-4xl sm:text-5xl text-amber-400 animate-spin";
+            songTitleDisplay.classList.add('blur-shuffle');
+
+            let shuffleCount = 0;
+            const maxShuffles = 22;
+            const intervalTime = 70;
+
+            const shuffleInterval = setInterval(async () => {
+                shuffleCount++;
+                const randomIndex = Math.floor(Math.random() * state.availablePool.length);
+                const tempSong = parseSongString(state.availablePool[randomIndex]);
+
+                songTitleDisplay.textContent = tempSong.title;
+                songArtistDisplay.textContent = tempSong.artist || "Canción Navideña";
+
+                playJingleBell();
+
+                if (shuffleCount >= maxShuffles) {
+                    clearInterval(shuffleInterval);
+
+                    if (state.availablePool.length === 0) {
+                        state.isDrawing = false;
+                        drawBtn.disabled = false;
+                        return;
+                    }
+
+                    const finalIndex = Math.floor(Math.random() * state.availablePool.length);
+                    const selectedSongRaw = state.availablePool[finalIndex];
+                    const newAvailable = [...state.availablePool];
+                    newAvailable.splice(finalIndex, 1);
+
+                    const parsed = parseSongString(selectedSongRaw);
+                    const drawRecord = {
+                        id: 'navidad_' + Date.now(),
+                        songRaw: selectedSongRaw,
+                        title: parsed.title,
+                        artist: parsed.artist,
+                        teacher: state.teacherName.trim(),
+                        drawNumber: state.claimedSongs.length + 1,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    };
+
+                    const newClaimed = [drawRecord, ...state.claimedSongs];
+
+                    // Guardar en la base de datos compartida en vivo
+                    await updateRoomDocument({
+                        availablePool: newAvailable,
+                        claimedSongs: newClaimed,
+                        lastWinner: drawRecord
+                    });
+
+                    state.isDrawing = false;
+
+                    songTitleDisplay.classList.remove('blur-shuffle');
+                    renderLastWinnerDisplay(drawRecord);
+
+                    visualBox.classList.remove('animate-pulse-fast', 'scale-110');
+                    visualIcon.className = "fa-solid fa-gift text-4xl sm:text-5xl text-red-400 animate-bounce";
+
+                    drawBtn.disabled = false;
+                    drawBtnText.textContent = "¡OBTENER CANCIÓN NAVIDEÑA!";
+
+                    playChristmasFanfare();
+                    triggerConfetti();
+
+                    showToast(`¡Asignada a ${state.teacherName}: "${parsed.title}"!`, "success");
+                }
+            }, intervalTime);
+        };
+
+        function renderLastWinnerDisplay(record) {
+            if (!record) return;
+            const titleDisplay = document.getElementById('songTitleDisplay');
+            const artistDisplay = document.getElementById('songArtistDisplay');
+            const badge = document.getElementById('teacherBadge');
+            const badgeName = document.getElementById('teacherBadgeName');
+
+            titleDisplay.textContent = record.title;
+            artistDisplay.textContent = record.artist ? `de ${record.artist}` : "Repertorio Navideño";
+            badgeName.textContent = record.teacher;
+            badge.classList.remove('hidden');
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 90,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: ['#c0392b', '#27ae60', '#f39c12', '#ffffff']
+                });
+            }
+        }
+
+        function parseSongString(raw) {
+            if (!raw) return { title: 'Canción Navideña', artist: '' };
+            const parts = raw.split(/ - | – | — /);
+            if (parts.length >= 2) {
+                return { title: parts[0].trim(), artist: parts.slice(1).join(' - ').trim() };
+            }
+            return { title: raw.trim(), artist: '' };
+        }
+
+        /* ==========================================================================
+           6. IDENTIFICACIÓN DE PROFESOR Y ENLACE COMPARTIDO
+           ========================================================================== */
+        window.handleTeacherNameInput = function() {
+            const input = document.getElementById('teacherNameInput');
+            const name = input.value;
+            state.teacherName = name;
+            localStorage.setItem('navidad_teacher_name', name);
+
+            const tag = document.getElementById('currentTeacherTag');
+            const check = document.getElementById('teacherSavedCheck');
+
+            if (name.trim()) {
+                tag.textContent = `Profesor(a): ${name.trim()}`;
+                tag.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-red-950 text-red-300 border border-red-800";
+                check.classList.remove('hidden');
+            } else {
+                tag.textContent = `Profesor(a): Anónimo`;
+                tag.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300";
+                check.classList.add('hidden');
+            }
+        };
+
+        window.copyShareLink = function() {
+            const shareUrl = `${window.location.origin}${window.location.pathname}#room=${state.roomId}`;
+            const temp = document.createElement('textarea');
+            temp.value = shareUrl;
+            document.body.appendChild(temp);
+            temp.select();
+            try {
+                document.execCommand('copy');
+                showToast("¡Enlace copiado! Envíalo a los profesores.", "success");
+            } catch (err) {
+                showToast("No se pudo copiar el enlace", "warning");
+            }
+            document.body.removeChild(temp);
+        };
+
+        window.switchRoomFromModal = function() {
+            const input = document.getElementById('roomInput');
+            const newRoom = input.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+            if (!newRoom) return;
+
+            subscribeToRoom(newRoom);
+            closeModal('roomModal');
+            showToast(`Cambiaste a la sala: "${newRoom}"`, "info");
+        };
+
+        /* ==========================================================================
+           7. GESTIÓN DEL REPERTORIO
+           ========================================================================== */
+        window.loadPreset = async function(key) {
+            if (PRESETS[key]) {
+                const newPool = [...PRESETS[key]];
+                await updateRoomDocument({ availablePool: newPool });
+                showToast(`¡Repertorio cargado en la sala! (${newPool.length} canciones)`, "info");
+            }
+        };
+
+        window.addSingleSong = async function() {
+            const input = document.getElementById('quickAddInput');
+            const val = input.value.trim();
+            if (!val) return;
+
+            const updated = [val, ...state.availablePool];
+            input.value = '';
+            await updateRoomDocument({ availablePool: updated });
+            showToast("Canción añadida al repertorio disponible", "success");
+        };
+
+        window.removeSongFromPool = async function(index) {
+            const updated = [...state.availablePool];
+            updated.splice(index, 1);
+            await updateRoomDocument({ availablePool: updated });
+            showToast("Canción eliminada del repertorio", "info");
+        };
+
+        window.shuffleActivePool = async function() {
+            if (state.availablePool.length <= 1) return;
+            const updated = [...state.availablePool];
+            for (let i = updated.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [updated[i], updated[j]] = [updated[j], updated[i]];
+            }
+            await updateRoomDocument({ availablePool: updated });
+            showToast("¡Lista de canciones mezclada!", "info");
+        };
+
+        window.cleanDuplicates = async function() {
+            const initialCount = state.availablePool.length;
+            const uniqueMap = new Map();
+            state.availablePool.forEach(song => {
+                const norm = song.toLowerCase().trim();
+                if (!uniqueMap.has(norm)) uniqueMap.set(norm, song);
+            });
+
+            const dedupped = Array.from(uniqueMap.values());
+            const removed = initialCount - dedupped.length;
+            await updateRoomDocument({ availablePool: dedupped });
+            showToast(removed > 0 ? `Se eliminaron ${removed} duplicados` : "No hay canciones duplicadas", "info");
+        };
+
+        window.returnSongToPool = async function(historyId) {
+            const hIndex = state.claimedSongs.findIndex(item => item.id === historyId);
+            if (hIndex !== -1) {
+                const item = state.claimedSongs[hIndex];
+                const newClaimed = [...state.claimedSongs];
+                newClaimed.splice(hIndex, 1);
+                const newAvailable = [...state.availablePool, item.songRaw];
+
+                await updateRoomDocument({
+                    availablePool: newAvailable,
+                    claimedSongs: newClaimed
+                });
+                showToast(`"${item.title}" regresó al repertorio disponible`, "info");
+            }
+        };
+
+        window.confirmResetAll = function() {
+            confirmDialog("¿Reiniciar Toda la Sala Navideña?", "Se devolverán TODAS las canciones asignadas a la lista disponible para todos los profesores.", async () => {
+                const allSongs = [...state.availablePool];
+                state.claimedSongs.forEach(h => allSongs.push(h.songRaw));
+
+                await updateRoomDocument({
+                    availablePool: allSongs,
+                    claimedSongs: [],
+                    lastWinner: null
+                });
+
+                document.getElementById('songTitleDisplay').textContent = "¡Listos para sortear!";
+                document.getElementById('songArtistDisplay').textContent = "Presiona el botón de abajo para obtener tu canción navideña sin duplicados.";
+                document.getElementById('teacherBadge').classList.add('hidden');
+
+                showToast("¡La sala fue reiniciada completamente!", "success");
+            });
+        };
+
+        /* ==========================================================================
+           8. MODALES Y MODO ADMINISTRADOR (PIN)
+           ========================================================================== */
+        window.openAdminPinModal = function() {
+            if (state.isAdmin) {
+                switchTab('adminTab');
+                return;
+            }
+            document.getElementById('adminPinInput').value = '';
+            openModal('adminPinModal');
+            setTimeout(() => document.getElementById('adminPinInput').focus(), 150);
+        };
+
+        window.verifyAdminPin = function() {
+            const pinInput = document.getElementById('adminPinInput').value;
+            if (pinInput === state.adminPin) {
+                state.isAdmin = true;
+                closeModal('adminPinModal');
+                renderAdminUI();
+                switchTab('adminTab');
+                showToast("¡Modo Organizador Activado! 🔓", "success");
+            } else {
+                showToast("PIN incorrecto. Intenta de nuevo.", "warning");
+                const input = document.getElementById('adminPinInput');
+                input.focus();
+                input.classList.add('ring-2', 'ring-rose-500');
+                setTimeout(() => input.classList.remove('ring-2', 'ring-rose-500'), 1500);
+            }
+        };
+
+        window.logoutAdmin = function(e) {
+            if (e) e.stopPropagation();
+            state.isAdmin = false;
+            renderAdminUI();
+            switchTab('historyTab');
+            showToast("Modo Organizador cerrado", "info");
+        };
+
+        window.openChangePinModal = function() {
+            document.getElementById('newPinInput').value = '';
+            openModal('changePinModal');
+        };
+
+        window.saveNewPin = function() {
+            const val = document.getElementById('newPinInput').value.trim();
+            if (!val || val.length < 3) {
+                showToast("El PIN debe tener al menos 3 caracteres", "warning");
+                return;
+            }
+            state.adminPin = val;
+            localStorage.setItem('navidad_admin_pin', val);
+            closeModal('changePinModal');
+            showToast("¡Nuevo PIN guardado correctamente!", "success");
+        };
+
+        function renderAdminUI() {
+            const adminBadgeContainer = document.getElementById('adminBadgeContainer');
+            const adminElements = document.querySelectorAll('.admin-only');
+
+            if (state.isAdmin) {
+                adminBadgeContainer.innerHTML = `
+                    <div class="flex items-center space-x-1.5 bg-amber-950/60 border border-amber-500/60 px-3 py-1.5 rounded-xl text-xs font-extrabold text-amber-300 shadow-sm">
+                        <i class="fa-solid fa-lock-open text-emerald-400"></i>
+                        <span>Admin Activo</span>
+                        <button onclick="logoutAdmin(event)" class="ml-1 text-slate-400 hover:text-white" title="Cerrar sesión de Organizador">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+                adminElements.forEach(el => el.classList.remove('hidden'));
+            } else {
+                adminBadgeContainer.innerHTML = `
+                    <button id="adminLoginBtn" onclick="openAdminPinModal()" class="px-3 py-1.5 rounded-xl border border-amber-500/50 bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 font-bold text-xs transition flex items-center gap-1.5" title="Acceso exclusivo para administradores y organizadores">
+                        <i class="fa-solid fa-lock text-amber-400"></i>
+                        <span>Organizador</span>
+                    </button>
+                `;
+                adminElements.forEach(el => el.classList.add('hidden'));
+            }
+            renderActivePoolList();
+            renderHistoryList();
+        }
+
+        window.openModal = function(id) {
+            if (id === 'editorModal') {
+                const textarea = document.getElementById('bulkTextarea');
+                textarea.value = state.availablePool.join('\n');
+                updateBulkLineCount();
+            } else if (id === 'roomModal') {
+                document.getElementById('roomInput').value = state.roomId;
+            }
+            document.getElementById(id).classList.remove('hidden');
+        };
+
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.add('hidden');
+        };
+
+        function updateBulkLineCount() {
+            const textarea = document.getElementById('bulkTextarea');
+            const lines = textarea.value.split('\n').filter(l => l.trim().length > 0);
+            document.getElementById('bulkLineCount').textContent = `${lines.length} canción(es) en lista`;
+        }
+
+        document.getElementById('bulkTextarea').addEventListener('input', updateBulkLineCount);
+
+        window.saveBulkEditor = async function() {
+            const textarea = document.getElementById('bulkTextarea');
+            const lines = textarea.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            await updateRoomDocument({ availablePool: lines });
+            closeModal('editorModal');
+            showToast(`¡Guardadas ${lines.length} canciones en la sala!`, "success");
+        };
+
+        function confirmDialog(title, message, onConfirm) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            const actionBtn = document.getElementById('confirmActionBtn');
+
+            const newBtn = actionBtn.cloneNode(true);
+            actionBtn.parentNode.replaceChild(newBtn, actionBtn);
+
+            newBtn.addEventListener('click', () => {
+                onConfirm();
+                closeModal('confirmModal');
+            });
+            openModal('confirmModal');
+        }
+
+        /* ==========================================================================
+           9. RENDERIZADO DE INTERFAZ
+           ========================================================================== */
+        function renderAll() {
+            renderMetrics();
+            renderAdminUI();
+        }
+
+        function renderMetrics() {
+            const remaining = state.availablePool.length;
+            const played = state.claimedSongs.length;
+            const total = remaining + played;
+            const percent = total > 0 ? Math.round((remaining / total) * 100) : 0;
+
+            document.getElementById('metricTotal').textContent = total;
+            document.getElementById('metricRemaining').textContent = remaining;
+            document.getElementById('metricPlayed').textContent = played;
+            document.getElementById('poolStatsText').textContent = `${remaining} / ${total} Disponibles`;
+
+            const progressBar = document.getElementById('poolProgressBar');
+            progressBar.style.width = `${percent}%`;
+
+            document.getElementById('tabCountRemaining').textContent = remaining;
+            document.getElementById('tabCountPlayed').textContent = played;
+        }
+
+        function renderActivePoolList() {
+            const container = document.getElementById('activePoolList');
+            const filterTerm = (document.getElementById('poolSearch').value || '').toLowerCase();
+
+            if (state.availablePool.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center border-2 border-dashed border-red-900/40 rounded-2xl">
+                        <i class="fa-solid fa-cookie-bite text-3xl text-amber-400 mb-2"></i>
+                        <p class="text-sm font-bold text-slate-200">¡Repertorio Vacío!</p>
+                        <p class="text-xs text-slate-400 mt-1">El organizador debe cargar un repertorio navideño.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const filtered = state.availablePool.filter(song => song.toLowerCase().includes(filterTerm));
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No se encontraron canciones.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map((songRaw) => {
+                const origIndex = state.availablePool.indexOf(songRaw);
+                const parsed = parseSongString(songRaw);
+                return `
+                    <div class="group flex items-center justify-between p-3 rounded-2xl bg-slate-900/70 border border-slate-700 hover:border-red-500 transition">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <div class="w-8 h-8 rounded-xl bg-red-950 text-red-400 border border-red-800 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                <i class="fa-solid fa-music"></i>
+                            </div>
+                            <div class="truncate">
+                                <p class="text-xs font-bold text-slate-100 truncate">${escapeHTML(parsed.title)}</p>
+                                ${parsed.artist ? `<p class="text-[10px] text-slate-400 truncate">${escapeHTML(parsed.artist)}</p>` : ''}
+                            </div>
+                        </div>
+                        ${state.isAdmin ? `
+                            <button onclick="removeSongFromPool(${origIndex})" class="opacity-70 group-hover:opacity-100 p-2 text-slate-400 hover:text-rose-400 transition" title="Eliminar del repertorio">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderHistoryList() {
+            const container = document.getElementById('historyList');
+
+            if (state.claimedSongs.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center border-2 border-dashed border-slate-700 rounded-2xl">
+                        <i class="fa-solid fa-holly-berry text-3xl text-slate-600 mb-2"></i>
+                        <p class="text-sm font-bold text-slate-300">Aún no hay canciones asignadas</p>
+                        <p class="text-xs text-slate-400 mt-1">Los sorteos realizados por los profesores aparecerán aquí en vivo.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = state.claimedSongs.map((item) => {
+                return `
+                    <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-900/70 border border-slate-700 hover:border-emerald-500 transition">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <span class="w-7 h-7 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300 font-extrabold text-xs flex items-center justify-center flex-shrink-0">
+                                #${item.drawNumber}
+                            </span>
+                            <div class="truncate">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-xs font-bold text-slate-100 truncate">${escapeHTML(item.title)}</p>
+                                    <span class="px-2 py-0.5 rounded-md bg-amber-950 text-amber-300 font-bold text-[9px] border border-amber-800 flex-shrink-0">
+                                        <i class="fa-solid fa-user-tie mr-1"></i>${escapeHTML(item.teacher || 'Profesor(a)')}
+                                    </span>
+                                </div>
+                                <p class="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                                    <span>${item.artist ? escapeHTML(item.artist) : 'Villancico'}</span>
+                                    <span>&bull;</span>
+                                    <span><i class="fa-regular fa-clock mr-1"></i>${item.timestamp}</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        ${state.isAdmin ? `
+                            <button onclick="returnSongToPool('${item.id}')" class="p-2 text-slate-400 hover:text-amber-400 transition" title="Devolver a la lista disponible">
+                                <i class="fa-solid fa-rotate-left text-xs"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.copyHistoryToClipboard = function() {
+            if (state.claimedSongs.length === 0) {
+                showToast("La lista de asignaciones está vacía", "warning");
+                return;
+            }
+            const lines = state.claimedSongs.map((h) => `#${h.drawNumber}: ${h.songRaw} (Asignada a: ${h.teacher}) [${h.timestamp}]`);
+            const textToCopy = lines.join('\n');
+
+            const temp = document.createElement('textarea');
+            temp.value = textToCopy;
+            document.body.appendChild(temp);
+            temp.select();
+            try {
+                document.execCommand('copy');
+                showToast("¡Lista de asignaciones copiada al portapapeles!", "success");
+            } catch (err) {
+                showToast("No se pudo copiar la lista", "warning");
+            }
+            document.body.removeChild(temp);
+        };
+
+        window.exportHistoryCSV = function() {
+            if (state.claimedSongs.length === 0) {
+                showToast("No hay registros para exportar", "warning");
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,Numero Sorteo,Cancion,Artista,Profesor,Hora\n";
+            state.claimedSongs.forEach(item => {
+                const cleanTitle = `"${item.title.replace(/"/g, '""')}"`;
+                const cleanArtist = `"${(item.artist || '').replace(/"/g, '""')}"`;
+                const cleanTeacher = `"${(item.teacher || 'Profesor').replace(/"/g, '""')}"`;
+                csvContent += `${item.drawNumber},${cleanTitle},${cleanArtist},${cleanTeacher},${item.timestamp}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `canciones_navidenas_sala_${state.roomId}_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("¡Descarga de CSV iniciada!", "success");
+        };
+
+        /* ==========================================================================
+           10. PESTAÑAS Y NOTIFICACIONES TOAST
+           ========================================================================== */
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold text-slate-400 hover:bg-slate-700 transition flex items-center justify-center space-x-2";
+            });
+
+            document.getElementById(`tabContent-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+            activeBtn.className = "tab-btn flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center space-x-2 bg-gradient-to-r from-red-600 to-emerald-600 text-white shadow-sm";
+        };
+
+        function showToast(message, type = "info") {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let bgClass = "bg-slate-800 border border-slate-700 text-white";
+            let iconClass = "fa-circle-info text-amber-400";
+
+            if (type === "success") iconClass = "fa-circle-check text-emerald-400";
+            else if (type === "warning") iconClass = "fa-triangle-exclamation text-amber-400";
+
+            toast.className = `flex items-center space-x-2 px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold ${bgClass} transform transition-all duration-300 translate-y-5 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${iconClass} text-sm"></i> <span>${escapeHTML(message)}</span>`;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-5', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+        }
+
+        /* ==========================================================================
+           11. ANIMACIÓN DE NIEVE EN CANVASES
+           ========================================================================== */
+        function initSnowCanvas() {
+            const canvas = document.getElementById('snowCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            const flakes = Array.from({ length: 45 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 3 + 1,
+                d: Math.random() * 0.8 + 0.4,
+                opacity: Math.random() * 0.6 + 0.3
+            }));
+
+            function draw() {
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.beginPath();
+                flakes.forEach(f => {
+                    ctx.moveTo(f.x, f.y);
+                    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2, true);
+                    f.y += f.d;
+                    f.x += Math.sin(f.y * 0.02) * 0.5;
+                    if (f.y > height) {
+                        f.y = -10;
+                        f.x = Math.random() * width;
+                    }
+                });
+                ctx.fill();
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // Cargar nombre del profesor si existe
+        if (state.teacherName) {
+            document.getElementById('teacherNameInput').value = state.teacherName;
+            handleTeacherNameInput();
+        }
+
+        updateSoundUI();
+        initSnowCanvas();
+        initAuth();
+    </script>
+</body>
+</html>
